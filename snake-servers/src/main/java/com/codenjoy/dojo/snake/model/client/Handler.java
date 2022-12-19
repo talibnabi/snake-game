@@ -1,50 +1,45 @@
 package com.codenjoy.dojo.snake.model.client;
 
 import com.codenjoy.dojo.services.Direction;
+import lombok.SneakyThrows;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+
+import static com.codenjoy.dojo.snake.model.client.StayAlive.stayAlive;
 
 public class Handler {
 
     private Handler() {
     }
 
-    public static Direction getDirectionFromMatrix(int[][] matrix, int startX, int startY, int endX, int endY) {
-        try {
-            List<PathPoint> path = getPath(matrix, startX, startY, endX, endY);
-            if (path == null || path.isEmpty()) {
-                return stayAlive(matrix, startX, startY);
-            }
-
-            PathPoint nextPoint = path.get(1);
-            return getDirection(startX, startY, nextPoint.x, nextPoint.y);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return stayAlive(matrix, startX, startY);
+    @SneakyThrows
+    public static Direction getDirectionFromMatrix(int[][] matrix, int startPointX, int startPointY, int endPointX, int endPointY) {
+        List<PathPoint> path = getPath(matrix, startPointX, startPointY, endPointX, endPointY);
+        if (path == null || path.isEmpty()) {
+            return stayAlive(matrix, startPointX, startPointY);
         }
+        PathPoint nextPoint = path.get(1);
+        return getDirection(startPointX, startPointY, nextPoint.x, nextPoint.y);
     }
 
-    private static List<PathPoint> getPath(int[][] matrix, int startX, int startY, int endX, int endY) {
+    private static List<PathPoint> getPath(int[][] matrix, int startPointX, int startPointY, int endPointX, int endPointY) {
         int[][] visited = new int[matrix.length][matrix[0].length];
         int[] dx = {0, 0, 1, -1};
         int[] dy = {1, -1, 0, 0};
 
-        Queue<PathPoint> queue = new LinkedList<>();
-        queue.add(new PathPoint(startX, startY));
-        visited[startX][startY] = 1;
-        while(!queue.isEmpty()){
+        Queue<PathPoint> queue = new PriorityQueue<>();
+        queue.add(new PathPoint(startPointX, startPointY));
+        visited[startPointX][startPointY] = 1;
+        while (!queue.isEmpty()) {
             PathPoint point = queue.poll();
-            if(point.x == endX && point.y == endY){
+            if (point.x == endPointX && point.y == endPointY) {
                 point.path.add(point);
                 return point.path;
             }
-            for(int i = 0; i < 4; i++){
+            for (int i = 0; i < 4; i++) {
                 int newX = point.x + dx[i];
                 int newY = point.y + dy[i];
-                if(isValid(matrix, visited, newX, newY)){
+                if (isValid(matrix, visited, newX, newY)) {
                     visited[newX][newY] = 1;
                     PathPoint newPoint = new PathPoint(newX, newY);
                     newPoint.path.addAll(point.path);
@@ -55,33 +50,22 @@ public class Handler {
         }
         return Collections.emptyList();
     }
-    
-    private static Direction stayAlive(int[][] matrix, int startX, int startY){
-        if (matrix[startX+1][startY] != 1) {
-            return Direction.RIGHT;
-        } else if (matrix[startX-1][startY] != 1) {
-            return Direction.LEFT;
-        } else if (matrix[startX][startY+1] != 1) {
-            return Direction.UP;
-        } else if (matrix[startX][startY-1] != 1) {
-            return Direction.DOWN;
-        }
-        return null;
-    }
 
-    private static boolean isValid(int[][] schema, int[][] visited, int x, int y){
+
+
+    private static boolean isValid(int[][] schema, int[][] visited, int x, int y) {
         return x >= 0 && x < schema.length && y >= 0 && y < schema[0].length && schema[x][y] == 0 && visited[x][y] == 0;
     }
 
-    private static Direction getDirection(int startX, int startY, int endX, int endY) {
-        if (startX == endX) {
-            if (startY < endY) {
+    private static Direction getDirection(int startPointX, int startPointY, int endPointX, int endPointY) {
+        if (startPointX == endPointX) {
+            if (startPointY < endPointY) {
                 return Direction.UP;
             } else {
                 return Direction.DOWN;
             }
         } else {
-            if (startX < endX) {
+            if (startPointX < endPointX) {
                 return Direction.RIGHT;
             } else {
                 return Direction.LEFT;
@@ -90,10 +74,9 @@ public class Handler {
     }
 
     private static class PathPoint {
-
         int x;
         int y;
-        List<PathPoint> path;
+        LinkedList<PathPoint> path;
         public PathPoint(int x, int y) {
             this.x = x;
             this.y = y;
